@@ -47,7 +47,6 @@ void multiProcessMergeSort(int arr[], int left, int right)
     shm[index] = arr[index];
   }
 
-
   switch (fork())
   {
     case -1:
