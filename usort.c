@@ -16,7 +16,6 @@
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
-
 #include <sys/wait.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,7 +25,8 @@
 /* LEFT index and RIGHT index of the sub-array of ARR[] to be sorted */
 void singleProcessMergeSort(int arr[], int left, int right) 
 {
-  if (left < right) {
+  if (left < right) 
+  {
     int middle = (left+right)/2;
     singleProcessMergeSort(arr, left, middle); 
     singleProcessMergeSort(arr, middle+1, right); 
@@ -60,15 +60,12 @@ void multiProcessMergeSort(int arr[], int left, int right)
     default:
       singleProcessMergeSort(arr,middle+1,right);//Papa Sorts The Right Side
       wait(NULL); //Make Sure Child Finished His Chores
-
       for(int index = 0; index <= middle; index++)//Copy Child's Work Back to Local
       {
         arr[index] = shm[index];
       }
-
       shmdt(shm); //Hang Up The Hat
       shmctl(shmid,IPC_RMID,NULL);//Push the Hat Rack Over
       merge(arr,left,middle,right);//Fusion!
   }
-      
 }
