@@ -1,6 +1,11 @@
-/*****************************
-* Multi-Threaded merge sort
-******************************/
+/************************************************************************
+ * Multi-Threaded Merge Sort
+ *
+ * UCSC Operating Systems Assignment 1
+ * 
+ * This solution written by Kyle Serio.
+ * Original assignment written 2020-2021 David C. Harrison.
+ ************************************************************************/
 
 
 #include "merge.h"
@@ -37,9 +42,7 @@ typedef struct
 void *threadInit(void *dataPtr)
 {
   thread_data *data = (thread_data*)dataPtr;
-
   singleThreadedMergeSort(data->array,data->left,data->right);
-
   pthread_exit(NULL);
 }
 
@@ -50,7 +53,6 @@ void *parentInit(void *dataPtr)
   int RM = (data->left+data->right)/2;
   thread_data childData;
   childData.tid = data->tid+1;
-
 
   childData.left = RM + 1;
   childData.right = data->right;
@@ -65,15 +67,10 @@ void *parentInit(void *dataPtr)
   pthread_exit(NULL);
 }
 
-/* 
- * This function stub needs to be completed 
- */
 void multiThreadedMergeSort(int arr[], int left, int right) 
 {
-
   void* res;
   thread_data data[2];
-
   int middle = (left+right+1)/2;
   int LM = (left+middle)/2;
 
@@ -84,12 +81,10 @@ void multiThreadedMergeSort(int arr[], int left, int right)
 
   for(long i = 0; i < 2; i++)
   {
-
     data[i].array = arr;
     data[i].tid = i;
     if(i == 1)
     {
-
       int rc = pthread_create(&data[i].tid, NULL, parentInit, (void *)&data[i]);
       if (rc)
       {
@@ -104,7 +99,6 @@ void multiThreadedMergeSort(int arr[], int left, int right)
         printf("Error! I think...\n");
       }
     }
-
   }
 
   singleThreadedMergeSort(arr,left,LM);
@@ -113,5 +107,3 @@ void multiThreadedMergeSort(int arr[], int left, int right)
   pthread_join(data[1].tid, &res);//WAIT for rightmid section's thread
   merge(arr,left,middle,right); //merge left and right halves
 }
-
-
