@@ -1,0 +1,416 @@
+# Kyle Serio 
+# Implements the same functionality as the make utility. All 
+# code contained within - unless function comment block specifies - written by Kyle Serio.
+
+$0 =~ s|.*/||;
+use Getopt::Std;
+use Data::Dumper;
+use strict;
+use warnings;
+
+my $STATUS = 0;
+END { exit $STATUS; }
+$SIG{'__WARN__'} = sub { print STDERR @_; $STATUS = 1; };
+$SIG{'__DIE__'} = sub { print STDERR @_; $STATUS = 1; exit; };
+
+#Upon receiving a properly formatted command, gives to the compiler to run
+sub run_command ($) {
+   my ($command) = @_;
+   my $newCommand;
+
+   if($command =~ m/^\s*@\s\S*\s(.*$)/)
+   { 
+      print "$1\n";
+   }
+   elsif ($command =~ m/^\s*-\s(.*$)/)
+   {
+      print "$1\n";
+      $command = $1;
+   }
+   else
+   {
+      print "$command\n";
+   }
+
+   my $status = eval {no warnings; system $command};
+   return undef unless $status;
+   return "$!" if $status == -1;
+   my $signal = $status & 0x7F;
+   my $core = $status & 0x80;
+   my $exit = ($status >> 8) & 0xFF;
+   return "Error $exit" unless $signal || $core;
+   return ($strsignal{$signal} || "Invalid Signal Number $signal")
+        . ($core ? " (core dumped)" : "");
+}
+
+my $MAKECMDGOALS;
+my $Makefile = "Makefile";
+my %OPTIONS;
+my %GRAPH;
+my %MACROS;
+my @goalAr;
+my $dumbCarrot = "";
+my $totalTarget = "";
+my $totalTargetModtime = 0;
+
+#Parses through a makefile. Creates the needed variables, labels, etc.
+#Handles wildcards. Not the cleanest code. Top and bottom blocks could 
+#most likely be made into a separate function.
+sub load_Makefile() {
+   open my $mkfile, "<$Makefile" or die "$0: $Makefile: $!";
+   my $target;
+   my $needWild = 0;
+   my $wildLine = "";
+   my $wildTarget = "";
+   my $wildPre = "";
+   my $wildCommand = "";
+   my $foundWild = 0;
+   my $tempWildCommand = "";
+
+   while (defined (my $line = <$mkfile>)) {
+      next if $line =~ m/^\s*(#|$)/;
+      if (!$target && $line =~ m/^\s*(\S+)\s*=\s*(.*?)\s*$/) {
+         $MACROS{$1} = {LINE=> $., VALUE=> $2};
+      }elsif ($line =~ m/^(\S+)\s*:\s*(.*)/) {
+
+         if ($needWild == 1)
+         {
+            
+            $tempWildCommand = macro_sub($wildCommand);
+            if($wildLine =~ m/.*:\s(\S*)\s.*/)
+            {
+               my $firstReq = $1;
+               my $len = length($tempWildCommand);
+               $tempWildCommand = substr($tempWildCommand,0,$len - 2);
+               $tempWildCommand = $tempWildCommand . $firstReq;
+            }
+            
+            push @{$GRAPH{$target}{COMMANDS}},
+                 {LINE=> $., CMD=> $tempWildCommand};
+         }
+         $target = macro_sub($1);
+         $GRAPH{$target}{PREREQS} = [split ' ', macro_sub($2)];
+         $GRAPH{$target}{LINE} = $.;
+         $MAKECMDGOALS = $target unless $MAKECMDGOALS;
+
+         if ($line =~ m/.*\%.*/)
+         {
+            $foundWild = 1;
+         }
+
+         unless ($line =~ m/.*all.*/)
+         {
+            $needWild = 1;
+            $wildLine = $line;
+         }
+      }elsif ($line =~ m/^\t(.*)/) {
+         if (defined $target) {
+            $needWild = 0;
+            if ($foundWild == 1)
+            {
+               $wildCommand = $1;
+               $foundWild = 0;
+            }
+            push @{$GRAPH{$target}{COMMANDS}},
+                 {LINE=> $., CMD=> $1};
+         }else {
+            stop "$.: Command before first target";
+         }
+      }else {
+         stop "$.: Missing separator";
+      }
+   }
+
+   if ($needWild == 1)
+   {
+      
+      $tempWildCommand = macro_sub($wildCommand);
+      if($wildLine =~ m/.*:\s(\S*)\s.*/)
+      {
+         my $firstReq = $1;
+         my $len = length($tempWildCommand);
+         $tempWildCommand = substr($tempWildCommand,0,$len - 2);
+         $tempWildCommand = $tempWildCommand . $firstReq;
+      }
+      
+      push @{$GRAPH{$target}{COMMANDS}},
+            {LINE=> $., CMD=> $tempWildCommand};
+   }
+   close $mkfile;
+}
+
+#Returns most recent time a file was modified
+sub modtime ($) {
+   my ($filename) = @_;
+   my @stat = stat $filename;
+   return @stat ? $stat[9] : undef;
+}
+
+#Simple helper function used to replace a section of a string
+sub replace($)
+{
+   my ($raw) = @_;
+   my $found = 0;
+   my $sub = "";
+
+   for my $macro (sort keys %MACROS) 
+   {
+      my $line = $MACROS{$macro}{LINE};
+      my $value = $MACROS{$macro}{VALUE};
+
+      if ($raw eq $macro)
+      {
+         $sub = $value;
+         $found = 1;
+      }
+   }
+   
+   if ($found == 0)
+   {
+      return $raw;
+   }
+
+   return $sub;
+}
+
+#When needed, this will perform macro substitution -
+#Replaces a piece of text with the previously defined 
+#macro it represents, to any depth. Should be redone with regex
+sub macro_sub($)
+{
+   my ($raw) = @_;
+   my $rawLen = length($raw);
+   my $index = $rawLen;
+   my $isMacro = 0;
+   my $macroStart = 0;
+   my $macroEnd = 0;
+   my $macro = "";
+   my $cooked = "";
+   my $assign = 0;
+   my $reset = 0;
+   my $lastMacro = "";
+   my $assignValue = "";
+   my $started = 0;
+
+   # A nice relic to the pre-regex times!
+   while ($index != 0)
+   {
+      if ($reset == 1)
+      {
+         $reset = 0;
+         $rawLen = length($raw);
+         $index = $rawLen;
+      }
+
+      my $index2 = $rawLen - $index;
+      my $char = substr($raw, $index2, 1);
+
+      if($assign == 1)
+      {
+         if ($char eq ' ')
+         {
+            if($started == 0)
+            {
+               $started = 1;
+            }
+            else
+            {
+               $assign = 0;
+               $started = 0;
+               $MACROS{$lastMacro} = $assignValue;
+            }
+         }
+         else
+         {
+            $assignValue = $assignValue . $char;
+         }
+      }
+
+      if ($isMacro == 1)
+      {
+         if($char eq '$')
+         {
+            $isMacro = 0;
+            $macroEnd = 0;
+            $macroStart = 0;
+         }
+         elsif($char eq '{')
+         {
+            $macroStart = $index2 + 1;
+         }
+         elsif ($char eq '}')
+         {
+            $macroEnd = $index2;
+            $macro = replace
+                   (substr($raw,$macroStart, $macroEnd - $macroStart));
+            my $preString = substr($raw,0,$macroStart - 2);
+            my $postString = substr
+                             ($raw,$macroEnd + 1, $rawLen - $macroEnd);
+            $cooked = $preString . $macro . $postString;
+
+            $raw = $cooked;
+            $reset = 1;
+            $isMacro = 0;
+            $macroStart = 0;
+            $macroEnd = 0;
+         }
+      }
+      elsif ($char eq '$')
+      {
+         $isMacro = 1;
+         $macroStart = $index2;
+      }
+      elsif ($char eq '=')
+      {
+         unless ($macro eq "")
+         {
+            $lastMacro = $macro;
+            $assign = 1;
+         }
+      }
+
+      $index = $index - 1;
+   }
+
+   if ($cooked eq "")
+   {
+      return $raw;
+   }
+   else
+   {
+      if($assign == 1)
+      {
+         $MACROS{$lastMacro} = {LINE=> $., VALUE=> $assignValue};
+         dump_graph();
+      }
+      return $cooked;
+   }
+
+}
+
+#Main function that handles the bulk of making specified goal.
+sub make_goal($) 
+{
+   my ($goal) = @_;
+   my $goalIndex = 0;
+
+   if ($totalTarget eq "")
+   {
+      $totalTarget = $goal;
+      $totalTargetModtime = modtime($totalTarget);
+      unless (defined($totalTargetModtime))
+      {
+         $totalTargetModtime = 0;
+      }
+   }
+
+   # Determine if this goal is a new one
+   if ( grep( /^$goal$/, @goalAr ))
+   {
+      return;
+   }
+   else
+   {
+      push(@goalAr, $goal);
+      $goalIndex = $goalIndex + 1;
+   }
+
+   # Find if the goal is not target, and is A) a file or B) neither
+   unless (exists($GRAPH{$goal}))
+   {
+      my $time = modtime($goal);
+      if (defined($time))
+      {
+         return $time;
+      }
+      else
+      {
+         print "pmake: *** No rule to make target '$goal'.  Stop.";
+         exit 1;
+      }
+   }
+
+   my $newestModtime = 0;
+   my $newestPre = "";
+   for my $target (sort keys %GRAPH)
+   {
+      if ($target eq $goal)
+      {
+         my $prereqs = $GRAPH{$target}{PREREQS};
+         for my $pre (@$prereqs)
+         {
+            make_goal($pre);
+            my $preModtime = modtime($pre); 
+            if (defined($preModtime))
+            {
+               if ($preModtime > $newestModtime)
+               { 
+                  $newestModtime = $preModtime; 
+                  $newestPre = $pre;
+               }
+            }
+
+         }
+      }
+   }
+
+   my $runCommands = 0;
+   my $targetTime = modtime($goal);
+   if (!defined($targetTime))
+   {
+      $targetTime = 0;
+      $runCommands = 1;
+   }
+
+   if ($newestModtime > $totalTargetModtime)
+   {
+      $runCommands = 1;
+   }
+
+   # We run commands connected to goal
+   if ($runCommands == 1)
+   {
+      my $nextCommand;
+
+      for my $cmd (@{$GRAPH{$goal}{COMMANDS}}) 
+      {
+         $nextCommand = $cmd->{CMD};
+         my $line = $cmd->{LINE};
+         # ----
+         $nextCommand = macro_sub($nextCommand);
+         # ----
+         my $status = 0;
+         $status = run_command($nextCommand);
+         if(!defined($status))
+         {
+            return;
+         }
+         elsif (substr($status,0,5) eq "Error")
+         {
+            if(substr($nextCommand,0,1) eq '-')
+            {
+               print "pmake: [$Makefile:$line: $totalTarget]";
+               print " $status (ignored)\n";
+               return;
+            }
+            else
+            {
+               print "pmake: *** [$Makefile:$line: $totalTarget]";
+               print " $status\n";
+            }
+         }
+         elsif($status)
+         {
+
+         }
+         else
+         {
+            print "pmake: *** $status\n";
+         }
+      }
+   }
+   else
+   {
+      print "pmake: '$goal' is up to date.\n";
+   }
+}
