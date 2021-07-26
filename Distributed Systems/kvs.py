@@ -20,13 +20,6 @@ print(f'Initial view {list(vc.keys())}.', file=sys.stderr)
 
 def reShard(shardCount):
 
-    # ~~ Treat this as pseudocode!! ~~
-    # It should work as is, but I'll do actual testing once the rest of the basic shard operations are in.
-
-    # Questions/Assumptions:
-    # Syntax for dict to dict assignment: add {key : value} to totalKVS is totalKVS[key] = node.kvs[key]
-    # Pulling all nodes for the reShard using os.getenv('VIEW').split(',') vs. pinging all and using the nodes that respond?
-
     # Step 1: Pull data from old nodes into totalKVS
     pulledShards = []
     totalKVS = {}
