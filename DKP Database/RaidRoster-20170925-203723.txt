@@ -1,0 +1,44 @@
+2	Kraz	67	Bard					
+5	Bardwoo	70	Bard					
+2	Tarburz	70	Berserker					
+3	Rambone	70	Berserker	Group Leader				
+3	Svynx	70	Berserker					
+9	Xhann	70	Berserker					
+1	Jancen	70	Cleric					
+1	Poppyseed	70	Cleric					
+5	Swoo	70	Cleric					
+8	Oberan	70	Cleric					
+8	Ayhla	70	Cleric					
+8	Mermal	69	Cleric					
+2	Mayhala	70	Druid	Group Leader				
+3	Thornywoo	70	Druid					
+8	Ramasu	70	Druid					
+4	Stopcast	70	Enchanter	Group Leader				
+4	Kronki	70	Enchanter					
+7	Mogui	70	Enchanter					
+7	Aliari	70	Enchanter					
+10	Raeyne	70	Enchanter					
+5	Petomatic	70	Magician	Group Leader				
+7	Jackuze	70	Magician	Group Leader				
+2	Kzafist	70	Monk					
+1	Gohe	70	Necromancer					
+3	Staffros	69	Necromancer					
+8	Ythera	70	Necromancer	Group Leader				
+6	Vaughten	70	Paladin	Group Leader				
+9	Callius	70	Ranger					
+9	Arylin	70	Ranger					
+3	Keldath	70	Ranger					
+2	Blizzardeus	70	Ranger					
+9	Footpace	70	Rogue					
+9	Gawwin	70	Rogue					
+2	Slushy	70	Rogue					
+1	Venalin	70	Shadow Knight	Raid Leader				
+6	Plica	70	Shadow Knight					
+8	Repentant	70	Shadow Knight					
+1	Jorious	70	Shadow Knight					
+9	Kanamori	70	Shaman	Group Leader				
+4	Finlay	70	Shaman					
+1	Luuk	70	Warrior					
+6	Byte	70	Warrior					
+3	Methot	70	Wizard					
+10	Tallenhof	70	Wizard	Group Leader				

@@ -1,0 +1,3 @@
+items 275
+players 63
+raids 0

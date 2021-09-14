@@ -1,0 +1,23 @@
+1	Ythera	70	Necromancer	Raid Leader			Yes	
+1	Mermal	70	Cleric				Yes	
+1	Jancen	70	Cleric				Yes	
+1	Venalin	70	Shadow Knight				Yes	
+1	Vaughten	70	Paladin				Yes	
+2	Tallenhof	70	Wizard	Group Leader			Yes	
+2	Keldath	70	Ranger				Yes	
+2	Ramasu	70	Druid				Yes	
+2	Jackuze	70	Magician				Yes	
+2	Methot	70	Wizard				Yes	
+2	Svynx	70	Berserker		X			
+3	Tarburz	70	Berserker	Group Leader			Yes	
+3	Gias	70	Druid				Yes	
+3	Gawwin	70	Rogue				Yes	
+3	Rambone	70	Berserker				Yes	
+3	Lalil	70	Rogue				Yes	
+3	Mekkaki	69	Cleric				Yes	
+4	Axxl	67	Bard	Group Leader			Yes	
+5	Temuujin	70	Warrior	Group Leader			Yes	
+5	Kronki	70	Enchanter				Yes	
+5	Mogui	70	Enchanter				Yes	
+5	Geban	70	Cleric				Yes	
+5	Repentant	70	Shadow Knight				Yes	

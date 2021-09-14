@@ -1,0 +1,24 @@
+5	Bardwoo	70	Bard				No	
+2	Blizzardeus	70	Ranger				Yes	
+4	Finlay	70	Shaman				Yes	
+1	Gohe	70	Necromancer				Yes	
+1	Jancen	70	Cleric				Yes	
+1	Jorious	70	Shadow Knight				Yes	
+3	Keldath	70	Ranger				Yes	
+4	Kronki	70	Enchanter				Yes	
+2	Kzafist	70	Monk				Yes	
+1	Luuk	70	Warrior				Yes	
+2	Mayhala	70	Druid				Yes	
+3	Methot	70	Wizard				Yes	
+5	Petomatic	70	Magician	Group Leader			No	
+1	Poppyseed	70	Cleric				Yes	
+3	Rambone	70	Berserker	Group Leader			Yes	
+2	Silkie	70	Rogue	Group Leader			Yes	
+2	Slushy	70	Rogue				Yes	
+3	Staffros	69	Necromancer				No	
+4	Stopcast	70	Enchanter	Group Leader			Yes	
+3	Svynx	70	Berserker				Yes	
+5	Swoo	70	Cleric				No	
+2	Tarburz	70	Berserker				Yes	
+3	Thornywoo	70	Druid				Yes	
+1	Venalin	70	Shadow Knight	Raid Leader			Yes	
