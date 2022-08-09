@@ -1,0 +1,11 @@
+<li><a href="{% url 'index'%}">{{ "Back" }}</a></li>
+{% if item_list %}
+    <table>
+    {% for item in item_list %}
+        <tr><td>{{ item.itemName }}</td> <td>{{ item.winner}}</td> <td>{{ item.itemDate }}</td></tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No items are available.</p>
+{% endif %}
+<li><a href="{% url 'index'%}">{{ "Back" }}</a></li>
